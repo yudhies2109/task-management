@@ -19,6 +19,14 @@
                 <p class="mb-0">
                     Role: {{ auth()->user()->role }}
                 </p>
+
+                <form method="POST" action="{{ route('logout') }}" class="mt-4">
+                    @csrf
+
+                    <button type="submit" class="btn btn-outline-danger">
+                    Logout
+                    </button>
+                </form>
             </div>
         </div>
     </main>
