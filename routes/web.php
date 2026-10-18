@@ -7,3 +7,7 @@ Route::get('/', function () {
 });
 
 Route::view('/test-ui', 'test-ui');
+
+Route::view('/register', 'auth.register')
+    ->middleware('guest')
+    ->name('register');
