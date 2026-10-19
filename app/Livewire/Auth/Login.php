@@ -21,6 +21,7 @@ class Login extends Component
             'password' => ['required', 'string'],
         ]);
 
+        
         // Mengidentifikasi percobaan login berdasarkan email dan IP.
         $key = 'login:'.hash(
             'sha256',
@@ -36,16 +37,24 @@ class Login extends Component
             ]);
         }
 
-        // Memeriksa kredensial dan melakukan login.
-        if (! Auth::attempt($validated)) {
-            RateLimiter::hit($key, 60);
+        // Memeriksa email, password, dan status aktif.
+        // Akun nonaktif tidak dapat login meskipun password benar.
+    if (! Auth::attempt([
+        'email' => $validated['email'],
+        'password' => $validated['password'],
+        'is_active' => true,
+    ])) {
+        // Mencatat kegagalan login untuk pembatasan percobaan.
+        RateLimiter::hit($key, 60);
 
-            $this->reset('password');
+        // Mengosongkan input password setelah login gagal.
+        $this->reset('password');
 
-            throw ValidationException::withMessages([
-                'email' => 'Email atau password salah.',
-            ]);
-        }
+        // Menampilkan pesan ketika kredensial salah atau akun nonaktif.
+        throw ValidationException::withMessages([
+        'email' => 'Email atau password salah, atau akun tidak aktif.',
+    ]);
+}
 
         // Menghapus hitungan kegagalan setelah login berhasil.
         RateLimiter::clear($key);
