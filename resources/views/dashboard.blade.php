@@ -20,6 +20,14 @@
                     Role: {{ auth()->user()->role }}
                 </p>
 
+                @if (auth()->user()->isAdmin())
+                <div class="mt-3">
+                    <a href="{{ route('admin.dashboard') }}" class="btn btn-primary">
+                    Dashboard Admin
+                    </a>
+                </div>
+                @endif
+
                 <form method="POST" action="{{ route('logout') }}" class="mt-4">
                     @csrf
 

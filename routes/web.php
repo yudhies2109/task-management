@@ -37,3 +37,8 @@ Route::post('/logout', function (Request $request) {
     // Kembali ke halaman Login.
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
+
+// TES Khusus Admin
+Route::view('/admin/dashboard', 'admin.dashboard')
+    ->middleware(['auth', 'admin'])
+    ->name('admin.dashboard');
