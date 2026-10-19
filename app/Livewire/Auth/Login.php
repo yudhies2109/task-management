@@ -2,10 +2,15 @@
 
 namespace App\Livewire\Auth;
 
+// Mengakses data pengguna melalui model User.
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
+
+// Memeriksa kecocokan password input dengan hash di database.
+use Illuminate\Support\Facades\Hash;
 
 class Login extends Component
 {
@@ -37,24 +42,39 @@ class Login extends Component
             ]);
         }
 
-        // Memeriksa email, password, dan status aktif.
-        // Akun nonaktif tidak dapat login meskipun password benar.
-    if (! Auth::attempt([
-        'email' => $validated['email'],
-        'password' => $validated['password'],
-        'is_active' => true,
-    ])) {
-        // Mencatat kegagalan login untuk pembatasan percobaan.
-        RateLimiter::hit($key, 60);
+                // Mencari user berdasarkan email yang sudah divalidasi.
+        $user = User::where('email', $validated['email'])->first();
 
-        // Mengosongkan input password setelah login gagal.
-        $this->reset('password');
+        // Menolak login jika email tidak ditemukan atau password salah.
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
+            // Mencatat kegagalan untuk membatasi percobaan login.
+            RateLimiter::hit($key, 60);
 
-        // Menampilkan pesan ketika kredensial salah atau akun nonaktif.
-        throw ValidationException::withMessages([
-        'email' => 'Email atau password salah, atau akun tidak aktif.',
-    ]);
-}
+            // Mengosongkan input password setelah login gagal.
+            $this->reset('password');
+
+            // Menampilkan pesan kesalahan kredensial.
+            throw ValidationException::withMessages([
+                'email' => 'Email atau password salah.',
+            ]);
+        }
+
+        // Memeriksa status akun setelah email dan password terbukti benar.
+        if (! $user->is_active) {
+            // Mencatat percobaan login pada akun nonaktif.
+            RateLimiter::hit($key, 60);
+
+            // Mengosongkan input password.
+            $this->reset('password');
+
+            // Menolak akun nonaktif tanpa membuat sesi login.
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah dinonaktifkan. Hubungi Admin.',
+            ]);
+        }
+
+        // Melakukan login setelah kredensial benar dan akun dipastikan aktif.
+        Auth::login($user);
 
         // Menghapus hitungan kegagalan setelah login berhasil.
         RateLimiter::clear($key);
