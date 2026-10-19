@@ -25,8 +25,14 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+        // Mengubah waktu verifikasi email menjadi objek tanggal dan waktu.
             'email_verified_at' => 'datetime',
+
+        // Melakukan hashing otomatis saat password ditetapkan pada model.
             'password' => 'hashed',
+
+        // Memastikan status akun dibaca sebagai boolean true atau false.
+            'is_active' => 'boolean',
         ];
     }
 
